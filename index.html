@@ -72,39 +72,50 @@
   <div class="notice" id="notice" role="status"></div>
 </main>
 <script>
-  // Destination PWA page. Change this URL if your install page uses another domain/path.
-  const APP_URL = "https://jamesblog.online/";
+const APP_URL = "https://jamesblog.online/";
 
-  const button = document.getElementById("installBtn");
-  const notice = document.getElementById("notice");
+document.getElementById("installBtn").addEventListener("click", function () {
+    const ua = navigator.userAgent;
 
-  function showNotice(message) {
-    notice.style.display = "block";
-    notice.textContent = message;
-  }
+    // ANDROID → GOOGLE CHROME
+    if (/Android/i.test(ua)) {
+        const url = new URL(APP_URL);
 
-  button.addEventListener("click", () => {
-    const target = new URL(APP_URL);
-    const ua = navigator.userAgent || "";
-    const isAndroid = /Android/i.test(ua);
+        const intent =
+            "intent://" + url.host + url.pathname + url.search +
+            "#Intent;scheme=https;" +
+            "package=com.android.chrome;" +
+            "S.browser_fallback_url=" +
+            encodeURIComponent(APP_URL) +
+            ";end";
 
-    if (isAndroid) {
-      // Ask Android to open the destination in Google Chrome.
-      const intentUrl =
-        "intent://" + target.host + target.pathname + target.search + target.hash +
-        "#Intent;scheme=https;package=com.android.chrome;" +
-        "S.browser_fallback_url=" + encodeURIComponent(APP_URL) + ";end";
-      window.location.href = intentUrl;
-
-      // If the embedded browser blocks the intent, provide a manual fallback.
-      window.setTimeout(() => {
-        showNotice("If Chrome did not open, tap the browser menu and choose 'Open in Chrome'.");
-      }, 1200);
-    } else {
-      // Non-Android fallback: open the destination normally.
-      window.location.href = APP_URL;
+        window.location.href = intent;
+        return;
     }
-  });
+
+    // IPHONE / IPAD → GOOGLE CHROME
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+        let switched = false;
+
+        document.addEventListener("visibilitychange", function () {
+            if (document.hidden) switched = true;
+        });
+
+        window.location.href =
+            "googlechromes://jamesblog.online/";
+
+        setTimeout(function () {
+            if (!switched && !document.hidden) {
+                window.location.href = APP_URL;
+            }
+        }, 1800);
+
+        return;
+    }
+
+    // OTHER DEVICES
+    window.location.href = APP_URL;
+});
 </script>
 </body>
 </html>
