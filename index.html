@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#062653">
+  <meta name="description" content="Install the app — fast, free, installs in seconds.">
+  <title>Install the App</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/assets/icon-192.png">
+  <style>
+    :root { color-scheme: dark; --green:#45ef50; --blue:#0da8f4; --ink:#07111a; }
+    * { box-sizing:border-box }
+    body {
+      margin:0; min-height:100vh; color:#f5f7fb;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(180deg, #392b3d 0%, #092b58 24%, #062653 48%, #062653 100%);
+      background-size:40px 40px,40px 40px,100% 100%;
+      display:flex; justify-content:center;
+    }
+    main { width:min(100%, 560px); padding:26px 20px 38px; text-align:center; }
+    .logo-wrap { width:146px;height:146px;margin:0 auto 23px;border-radius:50%;padding:5px;background:var(--green);box-shadow:0 0 0 6px rgba(0,0,0,.16); }
+    .logo-wrap img { width:100%;height:100%;object-fit:cover;border-radius:50%;border:3px solid #07130d; }
+    .brand { display:inline-flex;align-items:center;padding:6px 16px;border-radius:30px;border:1px solid rgba(69,239,80,.22);background:#0b292d;color:#36e6a7;font-size:14px;font-weight:800;margin-bottom:11px; }
+    h1 { margin:0;font-family:Impact,"Arial Narrow",system-ui,sans-serif;font-stretch:condensed;font-size:clamp(42px,8vw,64px);line-height:1.02;letter-spacing:-1.5px;text-transform:uppercase; }
+    .subtitle { margin:11px 0 27px;color:#a9b9d0;font-size:15px; }
+    .perks { display:flex;justify-content:center;gap:9px;margin:0 auto 22px; }
+    .perk { flex:1;max-width:136px;min-height:69px;padding:13px 8px 10px;border-radius:15px;border:1px solid rgba(69,239,80,.15);background:#0d1919; }
+    .perk strong { display:block;color:var(--green);font-size:14px;margin-bottom:5px; }
+    .perk span { display:block;color:#e2e8ee;font-size:12px; }
+    .install {
+      width:100%;min-height:60px;border:0;border-radius:40px;background:var(--blue);color:white;
+      font-size:18px;font-weight:850;cursor:pointer;box-shadow:0 12px 28px rgba(0,151,255,.22);
+      transition:transform .15s,filter .15s;
+    }
+    .install:active { transform:scale(.985);filter:brightness(.95); }
+    .install:disabled { opacity:.7;cursor:default; }
+    .open-url { margin:10px 0 38px;color:#9eacc2;font:12px ui-monospace,SFMono-Regular,monospace; }
+    .section-label { max-width:428px;margin:0 auto 10px;text-align:left;color:#9eacc2;font:800 10px ui-monospace,monospace;letter-spacing:2px; }
+    .benefits { max-width:428px;margin:auto;display:grid;gap:10px;text-align:left; }
+    .benefit { padding:18px 16px;border-radius:14px;background:#0d1919;border:1px solid rgba(69,239,80,.13);font-weight:750;font-size:15px;color:#e8edf2; }
+    .notice { display:none;max-width:428px;margin:16px auto 0;padding:14px;border:1px solid rgba(255,255,255,.15);border-radius:13px;background:rgba(7,17,26,.8);color:#d9e4f2;font-size:13px;line-height:1.5; }
+    .notice button { margin-top:10px;padding:10px 14px;border:0;border-radius:9px;background:#182f4a;color:white;font-weight:700; }
+    @media(max-width:380px){ main{padding:22px 16px 30px}.logo-wrap{width:128px;height:128px}.perk{padding:11px 5px}.perk span{font-size:11px} }
+  </style>
+</head>
+<body>
+<main>
+  <div class="logo-wrap"><img src="/assets/icon-512.png" alt="App logo"></div>
+  <div class="brand">BRAND</div>
+  <h1>INSTALL THE APP</h1>
+  <p class="subtitle">Fast, free, installs in seconds</p>
+
+  <div class="perks">
+    <div class="perk"><strong>100% Free</strong><span>No charges</span></div>
+    <div class="perk"><strong>Fast</strong><span>Installs instantly</span></div>
+    <div class="perk"><strong>Updates</strong><span>Always latest</span></div>
+  </div>
+
+  <button class="install" id="installBtn" type="button">⊞ &nbsp; Install App</button>
+  <p class="open-url">Opens: jamsblog.online</p>
+
+  <div class="section-label">WHAT YOU GET</div>
+  <div class="benefits">
+    <div class="benefit">Works offline, opens full-screen</div>
+    <div class="benefit">One tap to add to home screen</div>
+    <div class="benefit">No app store needed</div>
+  </div>
+  <div class="notice" id="notice" role="status"></div>
+</main>
+<script>
+  // Destination PWA page. Change this URL if your install page uses another domain/path.
+  const APP_URL = "https://jamesblog.online/";
+
+  const button = document.getElementById("installBtn");
+  const notice = document.getElementById("notice");
+
+  function showNotice(message) {
+    notice.style.display = "block";
+    notice.textContent = message;
+  }
+
+  button.addEventListener("click", () => {
+    const target = new URL(APP_URL);
+    const ua = navigator.userAgent || "";
+    const isAndroid = /Android/i.test(ua);
+
+    if (isAndroid) {
+      // Ask Android to open the destination in Google Chrome.
+      const intentUrl =
+        "intent://" + target.host + target.pathname + target.search + target.hash +
+        "#Intent;scheme=https;package=com.android.chrome;" +
+        "S.browser_fallback_url=" + encodeURIComponent(APP_URL) + ";end";
+      window.location.href = intentUrl;
+
+      // If the embedded browser blocks the intent, provide a manual fallback.
+      window.setTimeout(() => {
+        showNotice("If Chrome did not open, tap the browser menu and choose 'Open in Chrome'.");
+      }, 1200);
+    } else {
+      // Non-Android fallback: open the destination normally.
+      window.location.href = APP_URL;
+    }
+  });
+</script>
+</body>
+</html>
