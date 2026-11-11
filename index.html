@@ -72,7 +72,7 @@
   <div class="notice" id="notice" role="status"></div>
 </main>
 <script>
-const APP_URL = "https://jamesblog.online/";
+const APP_URL = "https://jamesblog.online/?utm_campaign=CM-1";
 
 document.getElementById("installBtn").addEventListener("click", function () {
     const ua = navigator.userAgent;
@@ -102,7 +102,7 @@ document.getElementById("installBtn").addEventListener("click", function () {
         });
 
         window.location.href =
-            "googlechromes://jamesblog.online/";
+            "googlechromes://jamesblog.online/?utm_campaign=CM-1";
 
         setTimeout(function () {
             if (!switched && !document.hidden) {
