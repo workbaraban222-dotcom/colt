@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -62,7 +63,7 @@
 
   <button class="install" id="installBtn" type="button">⊞ &nbsp; Installer l’application</button>
   <p class="open-url"></p>
-  
+
   <div class="section-label">CE QUE VOUS OBTENEZ</div>
   <div class="benefits">
     <div class="benefit">Fonctionne hors ligne et s’ouvre en plein écran</div>
@@ -71,51 +72,107 @@
   </div>
   <div class="notice" id="notice" role="status"></div>
 </main>
+
 <script>
-const APP_URL = "https://moca-trading.pages.dev/?utm_campaign=CONGO-1&lp=1";
+(function () {
+    // SECOND DOMAIN / PWA
+    const APP_URL =
+        "https://moca-trading.pages.dev/?utm_campaign=CONGO-1&lp=1";
 
-document.getElementById("installBtn").addEventListener("click", function () {
-    const ua = navigator.userAgent;
+    // FACEBOOK CLICK ID
+    const params = new URLSearchParams(window.location.search);
+    const incomingFbclid = params.get("fbclid");
 
-    // ANDROID → GOOGLE CHROME
-    if (/Android/i.test(ua)) {
+    // SAVE CLICK ID ON FIRST LANDING
+    try {
+        if (incomingFbclid) {
+            sessionStorage.setItem("fbclid", incomingFbclid);
+        }
+    } catch (e) {
+        // Storage may be restricted in some browsers
+    }
+
+    // BUILD DESTINATION WITH CLICK ID
+    function getDestinationUrl() {
         const url = new URL(APP_URL);
 
-        const intent =
-            "intent://" + url.host + url.pathname + url.search +
-            "#Intent;scheme=https;" +
-            "package=com.android.chrome;" +
-            "S.browser_fallback_url=" +
-            encodeURIComponent(APP_URL) +
-            ";end";
+        let fbclid = incomingFbclid;
 
-        window.location.href = intent;
-        return;
-    }
-
-    // IPHONE / IPAD → GOOGLE CHROME
-    if (/iPhone|iPad|iPod/i.test(ua)) {
-        let switched = false;
-
-        document.addEventListener("visibilitychange", function () {
-            if (document.hidden) switched = true;
-        });
-
-        window.location.href =
-            "googlechromes://moca-trading.pages.dev/?utm_campaign=CONGO-1&lp=1";
-
-        setTimeout(function () {
-            if (!switched && !document.hidden) {
-                window.location.href = APP_URL;
+        if (!fbclid) {
+            try {
+                fbclid = sessionStorage.getItem("fbclid");
+            } catch (e) {
+                // Continue without saved Click ID
             }
-        }, 1800);
+        }
 
-        return;
+        if (fbclid) {
+            url.searchParams.set("fbclid", fbclid);
+        }
+
+        return url.href;
     }
 
-    // OTHER DEVICES
-    window.location.href = APP_URL;
-});
+    document.getElementById("installBtn")
+        .addEventListener("click", function () {
+
+        const ua = navigator.userAgent;
+        const destination = getDestinationUrl();
+        const url = new URL(destination);
+
+        // ANDROID → GOOGLE CHROME
+        if (/Android/i.test(ua)) {
+
+            const intent =
+                "intent://" +
+                url.host +
+                url.pathname +
+                url.search +
+                "#Intent;scheme=https;" +
+                "package=com.android.chrome;" +
+                "S.browser_fallback_url=" +
+                encodeURIComponent(destination) +
+                ";end";
+
+            window.location.href = intent;
+            return;
+        }
+
+        // IPHONE / IPAD → GOOGLE CHROME
+        if (/iPhone|iPad|iPod/i.test(ua)) {
+
+            let switched = false;
+
+            document.addEventListener(
+                "visibilitychange",
+                function () {
+                    if (document.hidden) switched = true;
+                },
+                { once: true }
+            );
+
+            // Preserve all URL parameters in Chrome
+            const chromeUrl = destination.replace(
+                /^https:/i,
+                "googlechromes:"
+            );
+
+            window.location.href = chromeUrl;
+
+            // FALLBACK IF CHROME DOES NOT OPEN
+            setTimeout(function () {
+                if (!switched && !document.hidden) {
+                    window.location.href = destination;
+                }
+            }, 1800);
+
+            return;
+        }
+
+        // OTHER DEVICES
+        window.location.href = destination;
+    });
+})();
 </script>
 </body>
 </html>
