@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#062653">
   <meta name="description" content="Install the app — fast, free, installs in seconds.">
-  <title>JAMES APP</title>
+  <title>THEO APP</title>
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/assets/icon-192.png">
   <style>
@@ -53,7 +53,7 @@
   <div class="brand">BRAND</div>
   <h1>Installer l’application</h1>
   <p class="subtitle">Rapide, gratuit et prêt en quelques secondes.</p>
-<div class="perks">
+  <div class="perks">
     <div class="perk"><strong>100 % GRATUIT</strong><span>Aucun frais</span></div>
     <div class="perk"><strong>RAPIDE</strong><span>Installation instantanée</span></div>
     <div class="perk"><strong>MISES À JOUR</strong><span>Toujours à jour</span></div>
@@ -61,7 +61,7 @@
 
   <button class="install" id="installBtn" type="button">⊞ &nbsp; Installer l’application</button>
   <p class="open-url"></p>
-  
+
   <div class="section-label">CE QUE VOUS OBTENEZ</div>
   <div class="benefits">
     <div class="benefit">Fonctionne hors ligne et s’ouvre en plein écran</div>
@@ -73,47 +73,65 @@
 <script>
 const APP_URL = "https://moca-trading.pages.dev/?utm_campaign=CONGO-1&lp=1";
 
+// Всё, что Facebook и трекер дописали в адрес этого лендинга — fbclid, utm_*, click_id и прочее —
+// переносится в адрес приложения на другом домене. Иначе клик теряется на переходе,
+// и в приложении лид приходит без кампании и без click id для Conversions API.
+// Значения из APP_URL остаются значениями по умолчанию: пришедшее их перебивает.
+function targetUrl() {
+  var url = new URL(APP_URL);
+  try {
+    new URLSearchParams(location.search).forEach(function (value, key) {
+      if (!value) return;
+      if (key === "lp") return;                 // экран установки включаем сами
+      url.searchParams.set(key, value.slice(0, 500));
+    });
+  } catch (e) {
+    /* нет URLSearchParams — уходим с адресом по умолчанию */
+  }
+  url.searchParams.set("lp", "1");
+  return url;
+}
+
 document.getElementById("installBtn").addEventListener("click", function () {
-    const ua = navigator.userAgent;
+  var ua = navigator.userAgent;
+  var target = targetUrl();
+  var finalUrl = target.toString();
 
-    // ANDROID → GOOGLE CHROME
-    if (/Android/i.test(ua)) {
-        const url = new URL(APP_URL);
+  // ANDROID → GOOGLE CHROME
+  if (/Android/i.test(ua)) {
+    var intent =
+      "intent://" + target.host + target.pathname + target.search +
+      "#Intent;scheme=https;" +
+      "package=com.android.chrome;" +
+      "S.browser_fallback_url=" +
+      encodeURIComponent(finalUrl) +
+      ";end";
 
-        const intent =
-            "intent://" + url.host + url.pathname + url.search +
-            "#Intent;scheme=https;" +
-            "package=com.android.chrome;" +
-            "S.browser_fallback_url=" +
-            encodeURIComponent(APP_URL) +
-            ";end";
+    window.location.href = intent;
+    return;
+  }
 
-        window.location.href = intent;
-        return;
-    }
+  // IPHONE / IPAD → GOOGLE CHROME
+  if (/iPhone|iPad|iPod/i.test(ua)) {
+    var switched = false;
 
-    // IPHONE / IPAD → GOOGLE CHROME
-    if (/iPhone|iPad|iPod/i.test(ua)) {
-        let switched = false;
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) switched = true;
+    });
 
-        document.addEventListener("visibilitychange", function () {
-            if (document.hidden) switched = true;
-        });
+    window.location.href = "googlechromes://" + target.host + target.pathname + target.search;
 
-        window.location.href =
-            "googlechromes://moca-trading.pages.dev/?utm_campaign=CONGO-1&lp=1";
+    setTimeout(function () {
+      if (!switched && !document.hidden) {
+        window.location.href = finalUrl;
+      }
+    }, 1800);
 
-        setTimeout(function () {
-            if (!switched && !document.hidden) {
-                window.location.href = APP_URL;
-            }
-        }, 1800);
+    return;
+  }
 
-        return;
-    }
-
-    // OTHER DEVICES
-    window.location.href = APP_URL;
+  // OTHER DEVICES
+  window.location.href = finalUrl;
 });
 </script>
 </body>
